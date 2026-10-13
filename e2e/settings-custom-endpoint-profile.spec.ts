@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { launchShell, screenshotPath } from './helpers'
+import { closeAndSaveVideo, launchShell, screenshotPath } from './helpers'
 
 /**
  * The custom-endpoint profile pane: a self-hosted gateway is described in the
@@ -93,27 +93,30 @@ test('a custom endpoint carries a full declarative profile through save and rela
     // ── and the mirrored slot the request path reads ──
     expect(saved.providers.custom.baseUrl).toBe(BASE_URL)
     expect(saved.providers.custom.profile.api).toBe('anthropic')
-
-    // ── relaunch: the pane reflects the stored profile, not a blank form ──
-    const again = await launchShell({
-      userDataDir,
-      onboardingSeen: true,
-      videoDir: 'settings-endpoint-profile-reload',
-    })
-    try {
-      await openCustomProvider(again.page)
-      await expect(
-        again.page.getByRole('button', { name: 'API protocol', exact: true }),
-      ).toHaveText(/anthropic/)
-      await expect(again.page.locator('#set-ai-endpoint-idle')).toHaveValue('300')
-      await expect(again.page.locator('#set-ai-endpoint-key-env')).toHaveValue('GW_API_KEY')
-      await expect(again.page.locator('#set-ai-endpoint-models')).toHaveValue(/maxTokens/)
-      await again.page.screenshot({ path: screenshotPath('settings-endpoint-profile-reload') })
-    } finally {
-      await again.app.close()
-    }
   } finally {
-    await launched.app.close()
+    await closeAndSaveVideo(launched, 'settings-endpoint-profile')
+  }
+
+  // ── relaunch: the pane reflects the stored profile, not a blank form ──
+  // The first instance is closed before the second starts: both share one
+  // userDataDir, and the single-instance lock makes a concurrent second
+  // launch exit immediately (its window closes before firstWindow resolves).
+  const again = await launchShell({
+    userDataDir,
+    onboardingSeen: true,
+    videoDir: 'settings-endpoint-profile-reload',
+  })
+  try {
+    await openCustomProvider(again.page)
+    await expect(again.page.getByRole('button', { name: 'API protocol', exact: true })).toHaveText(
+      /anthropic/,
+    )
+    await expect(again.page.locator('#set-ai-endpoint-idle')).toHaveValue('300')
+    await expect(again.page.locator('#set-ai-endpoint-key-env')).toHaveValue('GW_API_KEY')
+    await expect(again.page.locator('#set-ai-endpoint-models')).toHaveValue(/maxTokens/)
+    await again.page.screenshot({ path: screenshotPath('settings-endpoint-profile-reload') })
+  } finally {
+    await closeAndSaveVideo(again, 'settings-endpoint-profile-reload')
   }
 })
 
