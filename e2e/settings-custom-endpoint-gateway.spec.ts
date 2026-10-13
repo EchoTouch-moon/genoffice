@@ -88,7 +88,7 @@ async function drive(
   await page.getByLabel('API Key').fill('local-key')
   if (protocol !== 'openai-compatible') {
     await page.getByRole('button', { name: 'API protocol', exact: true }).click()
-    await page.getByRole('option', { name: protocol, exact: true }).click()
+    await page.getByRole('option', { name: 'Anthropic Messages', exact: true }).click()
   }
   const modelPicker = page.getByRole('button', { name: 'Model', exact: true })
   await expect(modelPicker).toBeVisible({ timeout: 10_000 })

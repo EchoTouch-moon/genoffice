@@ -45,13 +45,20 @@ test('a custom endpoint carries a full declarative profile through save and rela
 
     // ── declare the Anthropic wire protocol ──
     await protocol.click()
-    await page.getByRole('option', { name: 'anthropic', exact: true }).click()
-    await expect(protocol).toHaveText(/anthropic/)
+    await page.getByRole('option', { name: 'Anthropic Messages', exact: true }).click()
+    await expect(protocol).toHaveText('Anthropic Messages')
 
     // ── the tri-state switches carry a declaration ──
-    await page.getByRole('radio', { name: 'Omit the temperature field' }).nth(2).click() // ON
-    await page.getByRole('radio', { name: 'Echo reasoning_content' }).nth(2).click() // ON
-    await page.getByRole('radio', { name: 'Use max_completion_tokens' }).nth(2).click() // ON
+    for (const name of [
+      'Omit the temperature field',
+      'Echo reasoning_content',
+      'Use max_completion_tokens',
+    ]) {
+      await page
+        .getByRole('radiogroup', { name, exact: true })
+        .getByRole('radio', { name: 'On', exact: true })
+        .click()
+    }
 
     // ── image input is a tri-state dropdown; "Not supported" declares text-only ──
     await page.getByRole('button', { name: 'Image input', exact: true }).click()
@@ -109,7 +116,7 @@ test('a custom endpoint carries a full declarative profile through save and rela
   try {
     await openCustomProvider(again.page)
     await expect(again.page.getByRole('button', { name: 'API protocol', exact: true })).toHaveText(
-      /anthropic/,
+      'Anthropic Messages',
     )
     await expect(again.page.locator('#set-ai-endpoint-idle')).toHaveValue('300')
     await expect(again.page.locator('#set-ai-endpoint-key-env')).toHaveValue('GW_API_KEY')
