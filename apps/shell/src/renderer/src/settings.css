@@ -926,13 +926,30 @@
 
 /* ── custom endpoint profile pane ── */
 
+.set-ai-profile-field,
+.set-ai-profile-blob {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.set-ai-profile-field .set-field-text,
+.set-ai-profile-blob .set-field-text {
+  flex: initial;
+}
+
+.set-ai-profile-blob .set-input-multiline {
+  width: 100%;
+  min-width: 0;
+}
+
 .set-ai-profile-switches {
   display: flex;
   flex-direction: column;
   gap: 6px;
   flex-shrink: 0;
-  width: 46%;
-  min-width: 200px;
+  width: 100%;
+  min-width: 0;
 }
 
 .set-ai-profile-row {
@@ -946,6 +963,7 @@
 
 .set-ai-profile-label {
   min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .set-ai-profile-tri {
@@ -977,4 +995,61 @@
 .set-ai-profile-tri-btn.is-active {
   background: var(--accent-soft, var(--hover));
   color: var(--text-primary);
+}
+
+/* The shell supports a 720px window; leave room for translated labels and
+   endpoint actions when the settings sidebar consumes most of that width. */
+@media (max-width: 900px) {
+  .set-pane-ai-model {
+    scroll-padding-top: 100px;
+  }
+
+  .set-pane-ai-model .set-pane-head,
+  .set-pane-ai-model .set-pane-actions {
+    flex-wrap: wrap;
+  }
+
+  .set-pane-ai-model .set-pane-actions {
+    flex-basis: 100%;
+  }
+
+  .set-pane-ai-model .set-field {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .set-pane-ai-model .set-field-text {
+    flex: initial;
+  }
+
+  .set-pane-ai-model .set-field-label {
+    flex-shrink: 1;
+    overflow-wrap: anywhere;
+  }
+
+  .set-pane-ai-model .set-input,
+  .set-pane-ai-model .set-input-multiline {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .set-pane-ai-model .set-num-input {
+    width: 64px;
+    align-self: flex-end;
+  }
+
+  .set-pane-ai-model .set-dd {
+    align-self: flex-end;
+    max-width: 100%;
+  }
+
+  .set-pane-ai-model .set-ai-endpoint-row {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .set-pane-ai-model .set-ai-endpoint-row .set-dd {
+    flex: 1 1 100%;
+  }
 }

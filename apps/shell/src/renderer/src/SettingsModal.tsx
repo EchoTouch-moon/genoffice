@@ -538,8 +538,9 @@ function AiModelPane({ t }: { t: TFunc }) {
       // never the user's declarations, which stay exactly as typed. A model
       // the server stops serving stops being described on the next probe.
       const probed = probedProfilesRef.current
+      const { models: _models, probedProfiles: _probedProfiles, ...declarations } = endpoint
       toSave = upsertCustomEndpoint(settings, {
-        ...endpoint,
+        ...declarations,
         ...(live.length > 0 ? { models: live } : {}),
         ...(probed && probed.length > 0 ? { probedProfiles: probed } : {}),
       })
@@ -792,7 +793,7 @@ function AiModelPane({ t }: { t: TFunc }) {
                   onPick={(api) => updateEndpointProfile({ api: api as AiCustomProtocol })}
                 />
               </div>
-              <div className="set-field">
+              <div className="set-field set-ai-profile-field">
                 <div className="set-field-text">
                   <div className="set-field-stack">
                     <label className="set-field-label">{t('setAiCompatTitle')}</label>
@@ -1885,7 +1886,7 @@ export function SettingsModal({
               </button>
             ))}
           </nav>
-          <div className="set-pane">
+          <div className={'set-pane' + (section === 'aiModel' ? ' set-pane-ai-model' : '')}>
             {section === 'account' && (
               <>
                 <h3 className="set-pane-title">{t('setSecAccount')}</h3>
@@ -2327,7 +2328,7 @@ function ProfileBlobField({
     setInvalid(false)
   }, [text])
   return (
-    <div className="set-field">
+    <div className={'set-field' + (multiline ? ' set-ai-profile-blob' : '')}>
       <div className="set-field-text">
         <div className="set-field-stack">
           <label className="set-field-label" htmlFor={fieldId}>

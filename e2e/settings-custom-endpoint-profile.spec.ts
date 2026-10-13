@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { launchShell, screenshotPath } from './helpers'
+import { closeAndSaveVideo, launchShell, screenshotPath } from './helpers'
 
 /**
  * The custom-endpoint profile pane: a self-hosted gateway is described in the
@@ -45,13 +45,20 @@ test('a custom endpoint carries a full declarative profile through save and rela
 
     // ── declare the Anthropic wire protocol ──
     await protocol.click()
-    await page.getByRole('option', { name: 'anthropic', exact: true }).click()
-    await expect(protocol).toHaveText(/anthropic/)
+    await page.getByRole('option', { name: 'Anthropic Messages', exact: true }).click()
+    await expect(protocol).toHaveText('Anthropic Messages')
 
     // ── the tri-state switches carry a declaration ──
-    await page.getByRole('radio', { name: 'Omit the temperature field' }).nth(2).click() // ON
-    await page.getByRole('radio', { name: 'Echo reasoning_content' }).nth(2).click() // ON
-    await page.getByRole('radio', { name: 'Use max_completion_tokens' }).nth(2).click() // ON
+    for (const name of [
+      'Omit the temperature field',
+      'Echo reasoning_content',
+      'Use max_completion_tokens',
+    ]) {
+      await page
+        .getByRole('radiogroup', { name, exact: true })
+        .getByRole('radio', { name: 'On', exact: true })
+        .click()
+    }
 
     // ── image input is a tri-state dropdown; "Not supported" declares text-only ──
     await page.getByRole('button', { name: 'Image input', exact: true }).click()
@@ -93,27 +100,30 @@ test('a custom endpoint carries a full declarative profile through save and rela
     // ── and the mirrored slot the request path reads ──
     expect(saved.providers.custom.baseUrl).toBe(BASE_URL)
     expect(saved.providers.custom.profile.api).toBe('anthropic')
-
-    // ── relaunch: the pane reflects the stored profile, not a blank form ──
-    const again = await launchShell({
-      userDataDir,
-      onboardingSeen: true,
-      videoDir: 'settings-endpoint-profile-reload',
-    })
-    try {
-      await openCustomProvider(again.page)
-      await expect(
-        again.page.getByRole('button', { name: 'API protocol', exact: true }),
-      ).toHaveText(/anthropic/)
-      await expect(again.page.locator('#set-ai-endpoint-idle')).toHaveValue('300')
-      await expect(again.page.locator('#set-ai-endpoint-key-env')).toHaveValue('GW_API_KEY')
-      await expect(again.page.locator('#set-ai-endpoint-models')).toHaveValue(/maxTokens/)
-      await again.page.screenshot({ path: screenshotPath('settings-endpoint-profile-reload') })
-    } finally {
-      await again.app.close()
-    }
   } finally {
-    await launched.app.close()
+    await closeAndSaveVideo(launched, 'settings-endpoint-profile')
+  }
+
+  // ── relaunch: the pane reflects the stored profile, not a blank form ──
+  // The first instance is closed before the second starts: both share one
+  // userDataDir, and the single-instance lock makes a concurrent second
+  // launch exit immediately (its window closes before firstWindow resolves).
+  const again = await launchShell({
+    userDataDir,
+    onboardingSeen: true,
+    videoDir: 'settings-endpoint-profile-reload',
+  })
+  try {
+    await openCustomProvider(again.page)
+    await expect(again.page.getByRole('button', { name: 'API protocol', exact: true })).toHaveText(
+      'Anthropic Messages',
+    )
+    await expect(again.page.locator('#set-ai-endpoint-idle')).toHaveValue('300')
+    await expect(again.page.locator('#set-ai-endpoint-key-env')).toHaveValue('GW_API_KEY')
+    await expect(again.page.locator('#set-ai-endpoint-models')).toHaveValue(/maxTokens/)
+    await again.page.screenshot({ path: screenshotPath('settings-endpoint-profile-reload') })
+  } finally {
+    await closeAndSaveVideo(again, 'settings-endpoint-profile-reload')
   }
 })
 

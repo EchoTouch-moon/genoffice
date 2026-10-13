@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { createServer, type Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
-import { launchShell, screenshotPath } from './helpers'
+import { closeAndSaveVideo, launchShell, screenshotPath } from './helpers'
 
 /**
  * The self-hosted-gateway loop, against a local server that answers in the
@@ -88,7 +88,7 @@ async function drive(
   await page.getByLabel('API Key').fill('local-key')
   if (protocol !== 'openai-compatible') {
     await page.getByRole('button', { name: 'API protocol', exact: true }).click()
-    await page.getByRole('option', { name: protocol, exact: true }).click()
+    await page.getByRole('option', { name: 'Anthropic Messages', exact: true }).click()
   }
   const modelPicker = page.getByRole('button', { name: 'Model', exact: true })
   await expect(modelPicker).toBeVisible({ timeout: 10_000 })
@@ -120,7 +120,7 @@ test('the default OpenAI-compatible shape still probes and connects as it always
     expect(seen.chatBody?.max_tokens).toBeUndefined()
     await page.screenshot({ path: screenshotPath('settings-endpoint-openai-compat') })
   } finally {
-    await launched.app.close()
+    await closeAndSaveVideo(launched, 'settings-endpoint-gateway')
   }
 })
 
@@ -141,6 +141,6 @@ test('a declared Anthropic gateway is probed and connected on its own route', as
     expect(seen.chatBody).toMatchObject({ model: 'local-model-b', max_tokens: 8192 })
     await page.screenshot({ path: screenshotPath('settings-endpoint-local-gateway') })
   } finally {
-    await launched.app.close()
+    await closeAndSaveVideo(launched, 'settings-endpoint-gateway')
   }
 })
